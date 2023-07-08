@@ -106,7 +106,7 @@ const Home = () => {
     return (
         <div className="card">
             <Toast ref={toast} />
-            <h1>Integrity Energy meter</h1>
+            <h1>Measurements</h1>
             <div className="">
                 <form onSubmit={handleSubmit(onSubmit, onSubmitError)} style={{ width: '100%' }}>
                     <Controller
