@@ -52,7 +52,11 @@ const Home = () => {
     }
 
     const onSubmit = (data: any) => {
-        updateTable(data);
+        if (moment(data.fromDate).get("year") < moment().get("year") && (data.details !== "monthly")) {
+            show("error", "Details must be monthly when required year less then current year");
+        } else {
+            updateTable(data);
+        }
     }
 
     const header = (
