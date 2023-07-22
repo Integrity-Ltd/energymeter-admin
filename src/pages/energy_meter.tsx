@@ -235,7 +235,7 @@ const EnergyMeter = () => {
                                         <label htmlFor={field.name}>IP Address: </label>
                                     </div>
                                     <div className="col-12 md:col-10">
-                                        <InputText id={field.name} value={field.value || ''} tooltip={errors.ip_address?.message} className={classNames({ 'p-invalid': fieldState.invalid })} onChange={field.onChange} style={{ width: '100%' }} />
+                                        <InputText disabled={editedRow && editedRow.id} id={field.name} value={field.value || ''} tooltip={errors.ip_address?.message} className={classNames({ 'p-invalid': fieldState.invalid })} onChange={field.onChange} style={{ width: '100%' }} />
                                     </div>
                                 </div>
                             </>
@@ -252,7 +252,7 @@ const EnergyMeter = () => {
                                         <label htmlFor={field.name}>Port: </label>
                                     </div>
                                     <div className="col-12 md:col-10">
-                                        <InputNumber id={field.name} value={field.value} tooltip={errors.port?.message} className={classNames({ 'p-invalid': fieldState.invalid })} onValueChange={(event) => field.onChange((event.target.value as number))} style={{ width: '100%' }} />
+                                        <InputNumber disabled={editedRow && editedRow.id} id={field.name} value={field.value} tooltip={errors.port?.message} className={classNames({ 'p-invalid': fieldState.invalid })} onValueChange={(event) => field.onChange((event.target.value as number))} style={{ width: '100%' }} />
                                     </div>
                                 </div>
                             </>
