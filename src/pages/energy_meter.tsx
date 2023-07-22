@@ -121,7 +121,7 @@ const EnergyMeter = () => {
             }).then((response) => { return response.json() }).then((data) => {
                 updatePage();
                 setVisible(false);
-                show("success", `Updated topic: ${JSON.stringify(data)}`);
+                show("success", `Updated energymeter: ${JSON.stringify(data)}`);
             }).catch((err) => show("error", err));
         } else {
             fetch('/api/admin/crud/energy_meter', {
@@ -135,7 +135,7 @@ const EnergyMeter = () => {
             }).then((response) => { return response.json() }).then((data) => {
                 updatePage();
                 setVisible(false);
-                show('success', `Saved topic: ${JSON.stringify(data)}`);
+                show('success', `Saved energymeter: ${JSON.stringify(data)}`);
             }).catch((err) => show('error', err));
         }
     }
