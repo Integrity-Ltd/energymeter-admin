@@ -24,7 +24,6 @@ interface FormValues {
     ip_address: string;
     port: number;
     time_zone: string;
-    use_dst: boolean;
     enabled: boolean;
 }
 
@@ -47,7 +46,6 @@ const EnergyMeter = () => {
         ip_address: z.string().ip("v4").nonempty(),
         port: z.number().min(1),
         time_zone: z.string().nonempty(),
-        use_dst: z.boolean(),
         enabled: z.boolean()
     });
 
@@ -83,7 +81,6 @@ const EnergyMeter = () => {
             let values = await res.json();
             values.forEach((element: any, idx: number) => {
                 values[idx].enabled = values[idx].enabled ? true : false;
-                values[idx].use_dst = values[idx].use_dst ? true : false;
             });
             return values;
         }
@@ -109,7 +106,6 @@ const EnergyMeter = () => {
             ip_address: control._formValues['ip_address'],
             port: control._formValues['port'],
             time_zone: control._formValues['time_zone'],
-            use_dst: control._formValues['use_dst'] ? true : false,
             enabled: control._formValues['enabled'] ? true : false,
         };
 
@@ -157,14 +153,12 @@ const EnergyMeter = () => {
             setValue("ip_address", editedRow.ip_address);
             setValue("port", editedRow.port);
             setValue("time_zone", editedRow.time_zone);
-            setValue("use_dst", editedRow.use_dst ? true : false);
             setValue("enabled", editedRow.enabled ? true : false);
         } else {
             setValue("asset_name", '');
             setValue("ip_address", '');
             setValue("port", 50003);
             setValue("time_zone", defaultTimeZone);
-            setValue("use_dst", false);
             setValue("enabled", false);
         }
     }, [editedRow, setValue]);
@@ -282,23 +276,6 @@ const EnergyMeter = () => {
                         )}
                     />
                     <Controller
-                        name="use_dst"
-                        control={control}
-                        rules={{ required: 'Use dst is required.' }}
-                        render={({ field, fieldState }) => (
-                            <>
-                                <div className="grid align-items-baseline">
-                                    <div className="col-12 mb-2 md:col-2 md:mb-0">
-                                        <label htmlFor={field.name}>Use DST: </label>
-                                    </div>
-                                    <div className="col-12 md:col-10">
-                                        <Checkbox onChange={(event) => field.onChange(event.target.checked ? true : false)} tooltip={errors.use_dst?.message} className={classNames({ 'p-invalid': fieldState.invalid })} checked={field.value}></Checkbox>
-                                    </div>
-                                </div>
-                            </>
-                        )}
-                    />
-                    <Controller
                         name="enabled"
                         control={control}
                         rules={{ required: 'Enabled is required.' }}
@@ -346,7 +323,6 @@ const EnergyMeter = () => {
                     <Column field="ip_address" header="IP address"></Column>
                     <Column field="port" header="Port"></Column>
                     <Column field="time_zone" header="Time zone"></Column>
-                    <Column field="use_dst" header="Use DST"></Column>
                     <Column field="enabled" header="Enabled"></Column>
                 </DataTable>
             </div>
