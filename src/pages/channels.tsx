@@ -128,7 +128,7 @@ const Channels = () => {
             }).then((response) => { return response.json() }).then((data) => {
                 updatePage();
                 setVisible(false);
-                show("success", `Updated topic: ${JSON.stringify(data)}`);
+                show("success", `Updated channel: ${JSON.stringify(data)}`);
             }).catch((err) => show("error", err));
         } else {
             fetch('/api/admin/crud/channels', {
@@ -142,7 +142,7 @@ const Channels = () => {
             }).then((response) => { return response.json() }).then((data) => {
                 updatePage();
                 setVisible(false);
-                show('success', `Saved topic: ${JSON.stringify(data)}`);
+                show('success', `Saved channel: ${JSON.stringify(data)}`);
             }).catch((err) => show('error', err));
         }
     }
