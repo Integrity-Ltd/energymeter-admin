@@ -19,6 +19,9 @@ import * as z from 'zod';
 const timeZonesList = momentTZ.tz.names();
 const defaultTimeZone = momentTZ.tz.guess();
 
+/**
+ * The input form objects
+ */
 interface FormValues {
     asset_name: string;
     ip_address: string;
@@ -27,9 +30,26 @@ interface FormValues {
     enabled: boolean;
 }
 
+/**
+ * The Zod validation schema of form data
+ */
+const schema = z.object({
+    asset_name: z.string().nonempty(),
+    ip_address: z.string().ip("v4").nonempty(),
+    port: z.number().min(1),
+    time_zone: z.string().nonempty(),
+    enabled: z.boolean()
+});
 
+/**
+ * The power mater component
+ * @returns the power meter ReactComponent
+ */
 const EnergyMeter = () => {
     const queryClient = useQueryClient();
+    /**
+     * Lazy data model state
+     */
     const [lazyState, setLazyState] = useState<DataTableStateEvent>({
         first: 0,
         rows: 10,
@@ -41,38 +61,57 @@ const EnergyMeter = () => {
         filters: {},
     });
 
-    const schema = z.object({
-        asset_name: z.string().nonempty(),
-        ip_address: z.string().ip("v4").nonempty(),
-        port: z.number().min(1),
-        time_zone: z.string().nonempty(),
-        enabled: z.boolean()
-    });
-
+    /**
+     * The edited row of power meter
+     */
     const [editedRow, setEditedRow] = useState<any>({});
+    /**
+     * The selected row of power meter
+     */
     const [selectedRow, setSelectedRow] = useState<any>({});
+    /**
+     * Visibility of form editor dialog
+     */
     const [visible, setVisible] = useState(false);
+    /**
+     * Visibility of confirm dialog
+     */
     const [confirmDialogVisible, setConfirmDialogVisible] = useState(false);
 
+    /**
+     * On page request of DataTable
+     */
     const onPage = useCallback((event: DataTableStateEvent) => {
         setLazyState(event);
     }, []);
 
+    /**
+     * Filter on powermeter DataTable
+     */
     const onFilter = useCallback((event: DataTableStateEvent) => {
         event.first = 0;
         setLazyState(event);
     }, []);
 
+    /**
+     * Selection changed event callback
+     */
     const onSelectionChange = useCallback((e: DataTableSelectionChangeEvent<any>) => {
         setSelectedRow(e.value);
     }, []);
 
+    /**
+     * Reload DataTable and count
+     */
     const updatePage = () => {
         queryClient.invalidateQueries({ queryKey: ["energy_meter"] });
         queryClient.invalidateQueries({ queryKey: ["energy_metercount"] });
         setSelectedRow(null);
     };
 
+    /**
+     * Power meter data query
+     */
     const { data: energy_meterValues, isLoading: isDataLoading } = useQuery({
         queryKey: ["energy_meter", lazyState],
         queryFn: async () => {
@@ -86,6 +125,9 @@ const EnergyMeter = () => {
         }
     });
 
+    /**
+     * Power meter count query
+     */
     const { data: count, isLoading: isCountLoading } = useQuery<number>({
         queryKey: ["energy_metercount", lazyState],
         queryFn: async () => {
@@ -96,10 +138,21 @@ const EnergyMeter = () => {
         }
     });
 
+    /**
+     * Toast reference
+     */
     const toast = useRef<Toast>(null);
 
+    /**
+     * React hook form
+     */
     const { control, handleSubmit, setValue, formState: { errors } } = useForm<FormValues>({ resolver: zodResolver(schema) });
 
+    /**
+     * React hook form submit callback. Use for create and update RestAPI calls
+     * 
+     * @param data submited data values
+     */
     const onSubmit = (data: any) => {
         const params = {
             asset_name: control._formValues['asset_name'],
@@ -140,12 +193,20 @@ const EnergyMeter = () => {
         }
     }
 
+    /**
+     * Show message
+     * @param severity severity of message
+     * @param message message to display
+     */
     const show = (severity: "success" | "info" | "warn" | "error" | undefined, message: string) => {
         if (toast.current !== null) {
             toast.current.show({ severity: severity, summary: 'Form submit', detail: message });
         }
     }
 
+    /**
+     * EditedRow useEffect
+     */
     useEffect(() => {
         //console.log(selectedRows);
         if (editedRow && editedRow.id) {
@@ -163,6 +224,9 @@ const EnergyMeter = () => {
         }
     }, [editedRow, setValue]);
 
+    /**
+     * Delete selected powermeter with RestAPI
+     */
     const deleteSelectedRow = () => {
         fetch('/api/admin/crud/energy_meter/' + selectedRow.id, {
             method: 'DELETE',
@@ -181,13 +245,24 @@ const EnergyMeter = () => {
         }).catch((err) => show("error", err));
     }
 
+    /**
+     * React hook form submition error handler
+     * @param errors errors
+     */
     const onSubmitError = (errors: any) => {
         //console.log(errors);
         show("error", "Please fill form as needed. Read tooltips on red marked fields.");
     }
 
+    /**
+     * DataTable reference
+     */
     const dt = useRef<any>(null);
 
+    /**
+     * Export measurements data to CSV
+     * @param selectionOnly export only selected data 
+     */
     const exportCSV = (selectionOnly: boolean) => {
         if (dt && dt.current) {
             const currentRef = dt.current;

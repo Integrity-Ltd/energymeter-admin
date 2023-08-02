@@ -16,6 +16,9 @@ import * as z from 'zod';
 import { classNames } from 'primereact/utils';
 import Converter from "../utils/Converter";
 
+/**
+ * The input form objects
+ */
 interface FormValues {
     energy_meter_id: string;
     channel: number;
@@ -23,6 +26,9 @@ interface FormValues {
     enabled: boolean;
 }
 
+/**
+ * The Zod validation schema of form data
+ */
 const schema = z.object({
     energy_meter_id: z.number(),
     channel: z.number().min(1),
@@ -30,8 +36,15 @@ const schema = z.object({
     enabled: z.boolean()
 });
 
+/**
+ * The Channels component
+ * @returns the Channels ReactComponent
+ */
 const Channels = () => {
     const queryClient = useQueryClient();
+    /**
+    * Lazy data model state
+    */
     const [lazyState, setLazyState] = useState<DataTableStateEvent>({
         first: 0,
         rows: 10,
@@ -44,29 +57,56 @@ const Channels = () => {
         },
     });
 
+    /**
+     * The edited row of channel
+     */
     const [editedRow, setEditedRow] = useState<any>({});
+    /**
+     * The selected row of channel
+     */
     const [selectedRow, setSelectedRow] = useState<any>({});
+    /**
+     * Visibility of form editor dialog
+     */
     const [visible, setVisible] = useState(false);
+    /**
+     * Visibility of confirm dialog
+     */
     const [confirmDialogVisible, setConfirmDialogVisible] = useState(false);
 
+    /**
+     * On page request of DataTable
+     */
     const onPage = useCallback((event: DataTableStateEvent) => {
         setLazyState(event);
     }, []);
 
+    /**
+     * Filter on powermeter DataTable
+     */
     const onFilter = useCallback((event: DataTableStateEvent) => {
         event.first = 0;
         setLazyState(event);
     }, []);
 
+    /**
+     * Selection changed event callback
+     */
     const onSelectionChange = useCallback((e: DataTableSelectionChangeEvent<any>) => {
         setSelectedRow(e.value);
     }, []);
 
+    /**
+     * Reload DataTable and count
+     */
     const updatePage = () => {
         queryClient.invalidateQueries({ queryKey: ["channels"] });
         queryClient.invalidateQueries({ queryKey: ["channelscount"] });
         setSelectedRow(null);
     };
+    /**
+     * Channels query with RestAPI call
+     */
     // eslint-disable-next-line
     const { data: channelsValues, status: dataFetchStatus, isLoading: isDataLoading } = useQuery({
         queryKey: ["channels", lazyState],
@@ -91,6 +131,9 @@ const Channels = () => {
         }
     });
 
+    /**
+     * Channel count query with RestAPI call
+     */
     const { data: count, isLoading: isCountLoading } = useQuery<number>({
         queryKey: ["channelscount", lazyState],
         queryFn: async () => {
@@ -101,14 +144,30 @@ const Channels = () => {
         }
     });
 
+    /**
+     * Toast reference
+     */
     const toast = useRef<Toast>(null);
+
+    /**
+     * React hook form
+     */
     const { control, handleSubmit, setValue, formState: { errors } } = useForm<FormValues>({ resolver: zodResolver(schema) });
 
+    /**
+     * React hook form submition error handler
+     * @param errors errors
+     */
     const onSubmitError = (errors: any) => {
         //console.log(errors);
         show("error", "Please fill form as needed. Read tooltips on red marked fields.");
     }
 
+    /**
+     * React hook form submit callback. Use for create and update RestAPI calls
+     * 
+     * @param data submited data values
+     */
     const onSubmit = (data: any) => {
         const params = {
             energy_meter_id: control._formValues['energy_meter_id'] ? control._formValues['energy_meter_id'] : undefined,
@@ -147,18 +206,33 @@ const Channels = () => {
         }
     }
 
+    /**
+     * Show message
+     * @param severity severity of message
+     * @param message message to display
+     */
     const show = (severity: "success" | "info" | "warn" | "error" | undefined, message: string) => {
         if (toast.current !== null) {
             toast.current.show({ severity: severity, summary: 'Form submit', detail: message });
         }
     }
 
+    /**
+     * Power meter values state hook
+     */
     const [energy_meterValues, setEnergy_meterValues] = useState<any>([]);
+    /**
+     * Power meter values fetch
+     */
     const fetchEnergy_meterValues = async () => {
         let response = await fetch('/api/admin/crud/energy_meter');
         let data = await response.json();
         setEnergy_meterValues(data);
     }
+
+    /**
+     * EditedRow useEffect
+     */
     useEffect(() => {
         //console.log(selectedRows);
         fetchEnergy_meterValues();
@@ -175,6 +249,9 @@ const Channels = () => {
         }
     }, [editedRow, setValue]);
 
+    /**
+     * Delete selected powermeter with RestAPI
+     */
     const deleteSelectedRow = () => {
         fetch('/api/admin/crud/channels/' + selectedRow.id, {
             method: 'DELETE',
@@ -193,8 +270,15 @@ const Channels = () => {
         }).catch((err) => show("error", err));
     }
 
+    /**
+     * DataTable reference
+     */
     const dt = useRef<any>(null);
 
+    /**
+     * Export measurements data to CSV
+     * @param selectionOnly export only selected data 
+     */
     const exportCSV = async (selectionOnly: boolean) => {
         //dt.current.exportCSV({ selectionOnly });
         let result = await fetch("/api/admin/crud/channels");

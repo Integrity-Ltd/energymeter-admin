@@ -12,6 +12,9 @@ import { Calendar } from 'primereact/calendar';
 import { Dropdown } from "primereact/dropdown";
 import moment from "moment";
 
+/**
+ * The input form objects
+ */
 interface FormValues {
     fromDate: string;
     toDate: string;
@@ -20,14 +23,30 @@ interface FormValues {
     details: string;
 }
 
+/**
+ * The report details
+ */
 const details = ['hourly', 'daily', 'monthly'];
 
+/**
+ * Home component
+ * @returns the Home ReactComponent
+ */
 const Home = () => {
 
+    /**
+     * The tabla of measurements
+     */
     const [measurements, setMeasurements] = useState([]);
 
+    /**
+     * The channels of selected powermeter
+     */
     const [channels, setChannels] = useState([]);
 
+    /**
+     * Zod validator of form input values
+     */
     const schema = z.object({
         fromDate: z.date(),
         toDate: z.date(),
@@ -36,21 +55,40 @@ const Home = () => {
         details: z.string().nonempty()
     });
 
+    /**
+     * Toaster reference
+     */
     const toast = useRef<Toast>(null);
 
+    /**
+     * React hook form
+     */
     const { control, handleSubmit, formState: { errors } } = useForm<FormValues>({ resolver: zodResolver(schema) });
 
+    /**
+     * Show message
+     * @param severity severity of message
+     * @param message message to display
+     */
     const show = (severity: "success" | "info" | "warn" | "error" | undefined, message: string) => {
         if (toast.current !== null) {
             toast.current.show({ severity: severity, summary: 'Form submit', detail: message });
         }
     }
 
+    /**
+     * Form submit error handler
+     * @param errors submit errors
+     */
     const onSubmitError = (errors: any) => {
         //console.log(errors);
         show("error", "Please fill form as needed. Read tooltips on red marked fields.");
     }
 
+    /**
+     * Form submit handler
+     * @param data the form input values
+     */
     const onSubmit = (data: any) => {
         if (moment(data.fromDate).get("year") < moment().get("year") && (data.details !== "monthly")) {
             show("error", "Details must be monthly when required year less then current year");
@@ -65,8 +103,15 @@ const Home = () => {
         </div>
     );
 
+    /**
+     * DataTable reference
+     */
     const dt = useRef<any>(null);
 
+    /**
+     * Export measurements data to CSV
+     * @param selectionOnly export only selected data 
+     */
     const exportCSV = (selectionOnly: boolean) => {
         if (dt && dt.current) {
             const currentRef = dt.current;
@@ -74,17 +119,28 @@ const Home = () => {
         }
     };
 
+    /**
+     * Get all powermeters from RestAPI
+     * @returns powermeters array
+     */
     const fetchEnergy_meterValues = async () => {
         let response = await fetch('/api/admin/crud/energy_meter');
         let data = await response.json();
         return data;
     }
 
+    /**
+     * Powermeter UseQuery
+     */
     const { data: energy_meterValues } = useQuery({
         queryKey: ["energy_meter"],
         queryFn: fetchEnergy_meterValues
     });
 
+    /**
+     * Get all channel of powermeter from RestAPI
+     * @param energy_meter_id chanels of powermeter
+     */
     const fetchChannels = async (energy_meter_id: number) => {
         let filter = encodeURIComponent(JSON.stringify({ energy_meter_id: energy_meter_id }));
         let result = await fetch('/api/admin/crud/channels?filter=' + filter);
@@ -92,6 +148,10 @@ const Home = () => {
         setChannels(data);
     }
 
+    /**
+     * Get all measurements
+     * @param params parameters of measurements report
+     */
     const updateTable = async (params: any) => {
         let values = [];
         let path = `/api/measurements/report?fromdate=${moment(params.fromDate).format("YYYY-MM-DD")}&todate=${moment(params.toDate).format("YYYY-MM-DD")}&ip=${params.ipAddress}&details=${params.details}`;
