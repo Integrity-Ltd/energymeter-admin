@@ -14,7 +14,7 @@ import { ConfirmDialog } from 'primereact/confirmdialog';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import { classNames } from 'primereact/utils';
-import Converter from "../utils/Converter";
+import { convertToCSV, downloadCSVFile } from "../utils/Converter";
 
 /**
  * The input form objects
@@ -283,8 +283,8 @@ const Channels = () => {
         //dt.current.exportCSV({ selectionOnly });
         let result = await fetch("/api/admin/crud/channels");
         let data = await result.json();
-        let csv = Converter.convertToCSV(data);
-        Converter.downloadCSVFile(csv, "download.csv");
+        let csv = convertToCSV(data);
+        downloadCSVFile(csv, "download.csv");
     };
 
     const header = (

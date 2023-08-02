@@ -1,4 +1,4 @@
-function convertToCSV(data: any) {
+export function convertToCSV(data: any) {
     const rows = [];
     const headers = Object.keys(data[0]);
 
@@ -14,7 +14,7 @@ function convertToCSV(data: any) {
     return rows.join('\n');
 }
 
-function downloadCSVFile(data: any, filename: string) {
+export function downloadCSVFile(data: any, filename: string) {
     const blob = new Blob([data], { type: 'text/csv;charset=utf-8;' });
     const url = URL.createObjectURL(blob);
 
@@ -26,5 +26,3 @@ function downloadCSVFile(data: any, filename: string) {
     link.click();
     document.body.removeChild(link);
 }
-
-export default { downloadCSVFile, convertToCSV }
