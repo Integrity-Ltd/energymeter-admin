@@ -149,18 +149,22 @@ const Home = () => {
         setChannels(data);
     }
 
+    const [isLoading, setIsLoading] = useState(false);
+
     /**
      * Get all measurements
      * @param params parameters of measurements report
      */
     const updateTable = async (params: any) => {
         let values = [];
+        setIsLoading(true);
         let path = `/api/measurements/report?fromdate=${dayjs(params.fromDate).format("YYYY-MM-DD")}&todate=${dayjs(params.toDate).format("YYYY-MM-DD")}&ip=${params.ipAddress}&details=${params.details}`;
         if (params.channel > 0) {
             path += `&channel=${params.channel}`;
         }
         const res = await fetch(path);
         values = await res.json();
+        setIsLoading(false);
         if (values.err) {
             show("error", values.err);
             values = [];
@@ -245,6 +249,7 @@ const Home = () => {
                     ref={dt}
                     header={header}
                     tableStyle={{ minWidth: '50rem' }}
+                    loading={isLoading}
                 >
                     <Column field="from_server_time" header="From Server Time"></Column>
                     <Column field="to_server_time" header="To Server Time"></Column>
