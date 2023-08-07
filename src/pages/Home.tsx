@@ -10,7 +10,8 @@ import { Button } from "primereact/button";
 import { classNames } from "primereact/utils";
 import { Calendar } from 'primereact/calendar';
 import { Dropdown } from "primereact/dropdown";
-import moment from "moment";
+import dayjs from "dayjs";
+
 
 /**
  * The input form objects
@@ -90,7 +91,7 @@ const Home = () => {
      * @param data the form input values
      */
     const onSubmit = (data: any) => {
-        if (moment(data.fromDate).get("year") < moment().get("year") && (data.details !== "monthly")) {
+        if (dayjs(data.fromDate).get("year") < dayjs().get("year") && (data.details !== "monthly")) {
             show("error", "Details must be monthly when required year less then current year");
         } else {
             updateTable(data);
@@ -154,7 +155,7 @@ const Home = () => {
      */
     const updateTable = async (params: any) => {
         let values = [];
-        let path = `/api/measurements/report?fromdate=${moment(params.fromDate).format("YYYY-MM-DD")}&todate=${moment(params.toDate).format("YYYY-MM-DD")}&ip=${params.ipAddress}&details=${params.details}`;
+        let path = `/api/measurements/report?fromdate=${dayjs(params.fromDate).format("YYYY-MM-DD")}&todate=${dayjs(params.toDate).format("YYYY-MM-DD")}&ip=${params.ipAddress}&details=${params.details}`;
         if (params.channel > 0) {
             path += `&channel=${params.channel}`;
         }

@@ -12,12 +12,23 @@ import { Button } from "primereact/button";
 import { Dialog } from 'primereact/dialog';
 import { ConfirmDialog } from 'primereact/confirmdialog';
 import { classNames } from 'primereact/utils';
-import momentTZ from "moment-timezone";
+import dayjs from "dayjs";
+import utc from 'dayjs/plugin/utc'
+import timezone from 'dayjs/plugin/timezone'
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 
-const timeZonesList = momentTZ.tz.names();
-const defaultTimeZone = momentTZ.tz.guess();
+dayjs.extend(utc)
+dayjs.extend(timezone)
+
+declare namespace Intl {
+    type Key = 'calendar' | 'collation' | 'currency' | 'numberingSystem' | 'timeZone' | 'unit';
+
+    function supportedValuesOf(input: Key): string[];
+}
+
+const timeZonesList = Intl.supportedValuesOf('timeZone');
+const defaultTimeZone = dayjs.tz.guess();
 
 /**
  * The input form objects
