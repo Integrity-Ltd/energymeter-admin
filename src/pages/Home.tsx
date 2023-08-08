@@ -157,6 +157,7 @@ const Home = () => {
      */
     const updateTable = async (params: any) => {
         let values = [];
+        dt.current.reset();
         setIsLoading(true);
         let path = `/api/measurements/report?fromdate=${dayjs(params.fromDate).format("YYYY-MM-DD")}&todate=${dayjs(params.toDate).format("YYYY-MM-DD")}&ip=${params.ipAddress}&details=${params.details}`;
         if (params.channel > 0) {
@@ -250,6 +251,8 @@ const Home = () => {
                     header={header}
                     tableStyle={{ minWidth: '50rem' }}
                     loading={isLoading}
+                    paginator={true}
+                    rows={100}
                 >
                     <Column field="from_server_time" header="From Server Time"></Column>
                     <Column field="to_server_time" header="To Server Time"></Column>
