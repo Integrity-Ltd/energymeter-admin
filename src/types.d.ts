@@ -18,6 +18,14 @@ interface EnergyMeterValues {
     enabled: boolean,
 }
 
+interface ChannelValues {
+    id: number,
+    energy_meter_id: number,
+    channel: number,
+    channel_name: string,
+    enabled: boolean,
+}
+
 interface RecElement {
     recorded_time: number,
     measured_value: number,

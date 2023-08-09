@@ -165,7 +165,7 @@ const EnergyMeter = () => {
      * 
      * @param data submited data values
      */
-    const onSubmit = (data: EnergyMeterValues) => {
+    const onSubmit = (data: FormValues) => {
         const params = {
             asset_name: data.asset_name,
             ip_address: data.ip_address,

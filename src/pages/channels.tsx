@@ -1,9 +1,9 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { DataTable, DataTableStateEvent, DataTableSelectionChangeEvent } from 'primereact/datatable';
+import { DataTable, DataTableStateEvent, DataTableSelectionChangeEvent, DataTableValueArray } from 'primereact/datatable';
 import { Column } from 'primereact/column';
 import { Toast } from "primereact/toast";
-import { useForm, Controller } from "react-hook-form";
+import { useForm, Controller, FieldErrors, SubmitHandler } from "react-hook-form";
 import { InputText } from 'primereact/inputtext';
 import { InputNumber } from "primereact/inputnumber";
 import { Checkbox } from 'primereact/checkbox';
@@ -20,7 +20,7 @@ import { convertToCSV, downloadCSVFile } from "../utils/Converter";
  * The input form objects
  */
 interface FormValues {
-    energy_meter_id: string;
+    energy_meter_id: number;
     channel: number;
     channel_name: string;
     enabled: boolean;
@@ -60,11 +60,11 @@ const Channels = () => {
     /**
      * The edited row of channel
      */
-    const [editedRow, setEditedRow] = useState<any>({});
+    const [editedRow, setEditedRow] = useState<ChannelValues | null>(null);
     /**
      * The selected row of channel
      */
-    const [selectedRow, setSelectedRow] = useState<any>({});
+    const [selectedRow, setSelectedRow] = useState<ChannelValues | null>(null);
     /**
      * Visibility of form editor dialog
      */
@@ -92,8 +92,8 @@ const Channels = () => {
     /**
      * Selection changed event callback
      */
-    const onSelectionChange = useCallback((e: DataTableSelectionChangeEvent<any>) => {
-        setSelectedRow(e.value);
+    const onSelectionChange = useCallback((e: DataTableSelectionChangeEvent<DataTableValueArray>) => {
+        setSelectedRow(e.value as ChannelValues);
     }, []);
 
     /**
@@ -118,8 +118,8 @@ const Channels = () => {
             const resEnergyMeters = await fetch(`/api/admin/crud/energy_meter`);
             const energyMetersValues = await resEnergyMeters.json();
 
-            values.forEach((element: any, idx: number) => {
-                const result = energyMetersValues.filter((energyMeter: any) => {
+            values.forEach((element: ChannelValues, idx: number) => {
+                const result = energyMetersValues.filter((energyMeter: EnergyMeterValues) => {
                     return energyMeter.id === element.energy_meter_id;
                 });
                 if (result.length > 0) {
@@ -158,7 +158,7 @@ const Channels = () => {
      * React hook form submition error handler
      * @param errors errors
      */
-    const onSubmitError = (errors: any) => {
+    const onSubmitError = (errors: FieldErrors<FormValues>) => {
         //console.log(errors);
         show("error", "Please fill form as needed. Read tooltips on red marked fields.");
     }
@@ -168,12 +168,12 @@ const Channels = () => {
      * 
      * @param data submited data values
      */
-    const onSubmit = (data: any) => {
+    const onSubmit = (data: FormValues) => {
         const params = {
-            energy_meter_id: control._formValues['energy_meter_id'] ? control._formValues['energy_meter_id'] : undefined,
-            channel: control._formValues['channel'],
-            channel_name: control._formValues['channel_name'],
-            enabled: control._formValues['enabled'] ? true : false,
+            energy_meter_id: data.energy_meter_id,
+            channel: data.channel,
+            channel_name: data.channel_name,
+            enabled: data.enabled,
         };
         if (editedRow && editedRow.id) {
             fetch('/api/admin/crud/channels/' + editedRow.id, {
@@ -220,7 +220,7 @@ const Channels = () => {
     /**
      * Power meter values state hook
      */
-    const [energy_meterValues, setEnergy_meterValues] = useState<any>([]);
+    const [energy_meterValues, setEnergy_meterValues] = useState<EnergyMeterValues[]>([]);
     /**
      * Power meter values fetch
      */
@@ -237,12 +237,12 @@ const Channels = () => {
         //console.log(selectedRows);
         fetchEnergy_meterValues();
         if (editedRow && editedRow.id) {
-            setValue("energy_meter_id", editedRow.energy_meter_id ? editedRow.energy_meter_id : null);
+            setValue("energy_meter_id", editedRow.energy_meter_id);
             setValue("channel", editedRow.channel);
             setValue("channel_name", editedRow.channel_name);
             setValue("enabled", editedRow.enabled ? true : false);
         } else {
-            setValue("energy_meter_id", '');
+            setValue("energy_meter_id", -1);
             setValue("channel", 1);
             setValue("channel_name", '');
             setValue("enabled", false);
@@ -253,27 +253,29 @@ const Channels = () => {
      * Delete selected powermeter with RestAPI
      */
     const deleteSelectedRow = () => {
-        fetch('/api/admin/crud/channels/' + selectedRow.id, {
-            method: 'DELETE',
-            credentials: "include",
-            headers: {
-                'Content-Type': 'application/json',
-                'Accept': 'application/json'
-            },
-            cache: 'no-cache',
-            body: JSON.stringify({ action: 'delete' }),
-        }).then((response) => {
-            return response.json();
-        }).then(data => {
-            show("success", `Deleted channels: ${JSON.stringify(data)}`);
-            updatePage();
-        }).catch((err) => show("error", err));
+        if (selectedRow) {
+            fetch('/api/admin/crud/channels/' + selectedRow.id, {
+                method: 'DELETE',
+                credentials: "include",
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json'
+                },
+                cache: 'no-cache',
+                body: JSON.stringify({ action: 'delete' }),
+            }).then((response) => {
+                return response.json();
+            }).then(data => {
+                show("success", `Deleted channels: ${JSON.stringify(data)}`);
+                updatePage();
+            }).catch((err) => show("error", err));
+        }
     }
 
     /**
      * DataTable reference
      */
-    const dt = useRef<any>(null);
+    const dt = useRef<DataTable<DataTableValueArray>>(null);
 
     /**
      * Export measurements data to CSV
@@ -403,7 +405,7 @@ const Channels = () => {
             <div className='vertical-align-baseline'>
                 <Button label="New" icon="pi pi-check" onClick={() => {
                     setSelectedRow(null);
-                    setEditedRow({});
+                    setEditedRow(null);
                     setVisible(true);
                 }} />
                 <Button label="Modify" icon="pi pi-check" onClick={() => {
