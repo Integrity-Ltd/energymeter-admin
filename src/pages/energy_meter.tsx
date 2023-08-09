@@ -1,9 +1,9 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { DataTable, DataTableStateEvent, DataTableSelectionChangeEvent } from 'primereact/datatable';
+import { DataTable, DataTableStateEvent, DataTableSelectionChangeEvent, DataTableValueArray } from 'primereact/datatable';
 import { Column } from 'primereact/column';
 import { Toast } from "primereact/toast";
-import { useForm, Controller } from "react-hook-form";
+import { useForm, Controller, FieldErrors } from "react-hook-form";
 import { InputText } from 'primereact/inputtext';
 import { InputNumber } from "primereact/inputnumber";
 import { Checkbox } from 'primereact/checkbox';
@@ -34,6 +34,7 @@ const defaultTimeZone = dayjs.tz.guess();
  * The input form objects
  */
 interface FormValues {
+    id: number,
     asset_name: string;
     ip_address: string;
     port: number;
@@ -75,11 +76,11 @@ const EnergyMeter = () => {
     /**
      * The edited row of power meter
      */
-    const [editedRow, setEditedRow] = useState<any>({});
+    const [editedRow, setEditedRow] = useState<EnergyMeterValues | null>(null);
     /**
      * The selected row of power meter
      */
-    const [selectedRow, setSelectedRow] = useState<any>({});
+    const [selectedRow, setSelectedRow] = useState<EnergyMeterValues | null>(null);
     /**
      * Visibility of form editor dialog
      */
@@ -107,8 +108,8 @@ const EnergyMeter = () => {
     /**
      * Selection changed event callback
      */
-    const onSelectionChange = useCallback((e: DataTableSelectionChangeEvent<any>) => {
-        setSelectedRow(e.value);
+    const onSelectionChange = useCallback((e: DataTableSelectionChangeEvent<DataTableValueArray>) => {
+        setSelectedRow(e.value as EnergyMeterValues);
     }, []);
 
     /**
@@ -164,13 +165,13 @@ const EnergyMeter = () => {
      * 
      * @param data submited data values
      */
-    const onSubmit = (data: any) => {
+    const onSubmit = (data: EnergyMeterValues) => {
         const params = {
-            asset_name: control._formValues['asset_name'],
-            ip_address: control._formValues['ip_address'],
-            port: control._formValues['port'],
-            time_zone: control._formValues['time_zone'],
-            enabled: control._formValues['enabled'] ? true : false,
+            asset_name: data.asset_name,
+            ip_address: data.ip_address,
+            port: data.port,
+            time_zone: data.time_zone,
+            enabled: data.enabled ? true : false,
         };
 
         if (editedRow && editedRow.id) {
@@ -239,28 +240,30 @@ const EnergyMeter = () => {
      * Delete selected powermeter with RestAPI
      */
     const deleteSelectedRow = () => {
-        fetch('/api/admin/crud/energy_meter/' + selectedRow.id, {
-            method: 'DELETE',
-            credentials: "include",
-            headers: {
-                'Content-Type': 'application/json',
-                'Accept': 'application/json'
-            },
-            cache: 'no-cache',
-            body: JSON.stringify({ action: 'delete' }),
-        }).then((response) => {
-            return response.json();
-        }).then(data => {
-            show("success", `Deleted energy_meter: ${JSON.stringify(data)}`);
-            updatePage();
-        }).catch((err) => show("error", err));
+        if (selectedRow) {
+            fetch('/api/admin/crud/energy_meter/' + selectedRow.id, {
+                method: 'DELETE',
+                credentials: "include",
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json'
+                },
+                cache: 'no-cache',
+                body: JSON.stringify({ action: 'delete' }),
+            }).then((response) => {
+                return response.json();
+            }).then(data => {
+                show("success", `Deleted energy_meter: ${JSON.stringify(data)}`);
+                updatePage();
+            }).catch((err) => show("error", err));
+        }
     }
 
     /**
      * React hook form submition error handler
      * @param errors errors
      */
-    const onSubmitError = (errors: any) => {
+    const onSubmitError = (errors: FieldErrors<FormValues>) => {
         //console.log(errors);
         show("error", "Please fill form as needed. Read tooltips on red marked fields.");
     }
@@ -268,7 +271,7 @@ const EnergyMeter = () => {
     /**
      * DataTable reference
      */
-    const dt = useRef<any>(null);
+    const dt = useRef<DataTable<any>>(null);
 
     /**
      * Export measurements data to CSV
@@ -321,7 +324,7 @@ const EnergyMeter = () => {
                                         <label htmlFor={field.name}>IP Address: </label>
                                     </div>
                                     <div className="col-12 md:col-10">
-                                        <InputText disabled={editedRow && editedRow.id} id={field.name} value={field.value || ''} tooltip={errors.ip_address?.message} className={classNames({ 'p-invalid': fieldState.invalid })} onChange={field.onChange} style={{ width: '100%' }} />
+                                        <InputText disabled={(editedRow !== undefined && editedRow !== null) && editedRow.id > -1} id={field.name} value={field.value || ''} tooltip={errors.ip_address?.message} className={classNames({ 'p-invalid': fieldState.invalid })} onChange={field.onChange} style={{ width: '100%' }} />
                                     </div>
                                 </div>
                             </>
@@ -338,7 +341,7 @@ const EnergyMeter = () => {
                                         <label htmlFor={field.name}>Port: </label>
                                     </div>
                                     <div className="col-12 md:col-10">
-                                        <InputNumber disabled={editedRow && editedRow.id} id={field.name} value={field.value} tooltip={errors.port?.message} className={classNames({ 'p-invalid': fieldState.invalid })} onValueChange={(event) => field.onChange((event.target.value as number))} style={{ width: '100%' }} />
+                                        <InputNumber disabled={(editedRow !== undefined && editedRow !== null) && editedRow.id > -1} id={field.name} value={field.value} tooltip={errors.port?.message} className={classNames({ 'p-invalid': fieldState.invalid })} onValueChange={(event) => field.onChange((event.target.value as number))} style={{ width: '100%' }} />
                                     </div>
                                 </div>
                             </>
@@ -415,7 +418,7 @@ const EnergyMeter = () => {
             <div className='vertical-align-baseline'>
                 <Button label="New" icon="pi pi-check" onClick={() => {
                     setSelectedRow(null);
-                    setEditedRow({});
+                    setEditedRow(null);
                     setVisible(true);
                 }} />
                 <Button label="Modify" icon="pi pi-check" onClick={() => {
