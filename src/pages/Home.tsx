@@ -2,7 +2,7 @@ import { useRef, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { DataTable } from "primereact/datatable";
 import { Column } from "primereact/column";
-import { Controller, useForm } from "react-hook-form";
+import { Controller, FieldErrors, useForm } from "react-hook-form";
 import * as z from 'zod';
 import { Toast } from "primereact/toast";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -12,17 +12,6 @@ import { Calendar } from 'primereact/calendar';
 import { Dropdown } from "primereact/dropdown";
 import dayjs from "dayjs";
 
-
-/**
- * The input form objects
- */
-interface FormValues {
-    fromDate: string;
-    toDate: string;
-    ipAddress: string;
-    channel: number;
-    details: string;
-}
 
 /**
  * The report details
@@ -56,6 +45,10 @@ const Home = () => {
         details: z.string().nonempty()
     });
 
+    interface formValues {
+        fromDate: string, toDate: string, ipAddress: string, channel: number, details: string
+    }
+
     /**
      * Toaster reference
      */
@@ -81,7 +74,7 @@ const Home = () => {
      * Form submit error handler
      * @param errors submit errors
      */
-    const onSubmitError = (errors: any) => {
+    const onSubmitError = (errors: FieldErrors<FormValues>) => {
         //console.log(errors);
         show("error", "Please fill form as needed. Read tooltips on red marked fields.");
     }
@@ -90,7 +83,7 @@ const Home = () => {
      * Form submit handler
      * @param data the form input values
      */
-    const onSubmit = (data: any) => {
+    const onSubmit = (data: FormValues) => {
         if (dayjs(data.fromDate).get("year") < dayjs().get("year") && (data.details !== "monthly")) {
             show("error", "Details must be monthly when required year less then current year");
         } else {
@@ -107,7 +100,7 @@ const Home = () => {
     /**
      * DataTable reference
      */
-    const dt = useRef<any>(null);
+    const dt = useRef<DataTable<any>>(null);
 
     /**
      * Export measurements data to CSV
@@ -155,9 +148,11 @@ const Home = () => {
      * Get all measurements
      * @param params parameters of measurements report
      */
-    const updateTable = async (params: any) => {
+    const updateTable = async (params: formValues) => {
         let values = [];
-        dt.current.reset();
+        if (dt && dt.current) {
+            dt.current.reset();
+        }
         setIsLoading(true);
         let path = `/api/measurements/report?fromdate=${dayjs(params.fromDate).format("YYYY-MM-DD")}&todate=${dayjs(params.toDate).format("YYYY-MM-DD")}&ip=${params.ipAddress}&details=${params.details}`;
         if (params.channel > 0) {
@@ -207,7 +202,7 @@ const Home = () => {
                             <>
 
                                 <Dropdown id={field.name} value={field.value} tooltip={errors.ipAddress?.message} className={classNames({ 'p-invalid': fieldState.invalid })} onChange={(event) => {
-                                    let energymeter = energy_meterValues.filter((item: any) => {
+                                    let energymeter = energy_meterValues.filter((item: EnergyMeterValues) => {
                                         return item.ip_address === event.target.value;
                                     })
                                     if (energymeter.length > 0) {
