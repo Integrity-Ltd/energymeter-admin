@@ -1,6 +1,6 @@
 import { useRef, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { DataTable } from "primereact/datatable";
+import { DataTable, DataTableValueArray } from "primereact/datatable";
 import { Column } from "primereact/column";
 import { Controller, FieldErrors, useForm } from "react-hook-form";
 import * as z from 'zod';
@@ -100,7 +100,7 @@ const Home = () => {
     /**
      * DataTable reference
      */
-    const dt = useRef<DataTable<any>>(null);
+    const dt = useRef<DataTable<DataTableValueArray>>(null);
 
     /**
      * Export measurements data to CSV

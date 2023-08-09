@@ -130,7 +130,7 @@ const EnergyMeter = () => {
             const filters = encodeURIComponent(JSON.stringify(lazyState.filters));
             const res = await fetch(`/api/admin/crud/energy_meter?first=${lazyState.first}&rowcount=${lazyState.rows}&filter=${filters}`);
             let values = await res.json();
-            values.forEach((element: any, idx: number) => {
+            values.forEach((element: EnergyMeterValues, idx: number) => {
                 values[idx].enabled = values[idx].enabled ? true : false;
             });
             return values;
@@ -271,7 +271,7 @@ const EnergyMeter = () => {
     /**
      * DataTable reference
      */
-    const dt = useRef<DataTable<any>>(null);
+    const dt = useRef<DataTable<DataTableValueArray>>(null);
 
     /**
      * Export measurements data to CSV
