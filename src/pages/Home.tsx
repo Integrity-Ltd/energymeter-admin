@@ -254,10 +254,10 @@ const Home = () => {
                     paginator={true}
                     rows={100}
                 >
-                    <Column field="from_server_time" header="From Server Time"></Column>
-                    <Column field="to_server_time" header="To Server Time"></Column>
                     <Column field="from_local_time" header="From Local Time"></Column>
                     <Column field="to_local_time" header="To Local Time"></Column>
+                    <Column field="from_server_time" header="From Server Time"></Column>
+                    <Column field="to_server_time" header="To Server Time"></Column>
                     <Column field="from_utc_time" header="From UTC Time"></Column>
                     <Column field="to_utc_time" header="To UTC Time"></Column>
                     <Column field="channel" header="Channel"></Column>
